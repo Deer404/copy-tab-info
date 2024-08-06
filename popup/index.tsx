@@ -2,22 +2,23 @@ import { useEffect, useState } from "react"
 
 import "./style.css"
 
+const NotSet = "Not set"
+
 export default function Popup() {
   const [tabInfo, setTabInfo] = useState({ title: "", url: "" })
-  const [shortcut, setShortcut] = useState("")
+  const [shortcut, setShortcut] = useState(NotSet)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    // 获取当前标签信息
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
         setTabInfo({
           title: tabs[0].title,
-          url: tabs[0].url // 使用完整的 URL
+          url: tabs[0].url
         })
       }
     })
 
-    // 获取当前快捷键设置
     chrome.commands.getAll((commands) => {
       const copyCommand = commands.find(
         (command) => command.name === "copy-tab-info"
@@ -25,14 +26,21 @@ export default function Popup() {
       if (copyCommand && copyCommand.shortcut) {
         setShortcut(copyCommand.shortcut)
       } else {
-        setShortcut("Not set")
+        setShortcut(NotSet)
       }
     })
   }, [])
 
   const copyToClipboard = () => {
     const text = `${tabInfo.title}\n${tabInfo.url}`
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000) // Reset after 2 seconds
+    })
+  }
+
+  const openShortcutSettings = () => {
+    chrome.tabs.create({ url: "chrome://extensions/shortcuts" })
   }
 
   return (
@@ -48,12 +56,23 @@ export default function Popup() {
       </div>
       <button
         onClick={copyToClipboard}
-        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none py-2 px-3 rounded cursor-pointer transition-opacity duration-300 hover:opacity-90 mb-2">
-        Copy
+        className={`w-full ${
+          copied
+            ? "bg-green-500"
+            : "bg-gradient-to-r from-blue-500 to-purple-600"
+        } text-white border-none py-2 px-3 rounded cursor-pointer transition-all duration-300 hover:opacity-90 mb-2`}>
+        {copied ? "Copied!" : "Copy"}
       </button>
-      <p className="text-sm text-gray-600 text-center">
+      <div className="text-sm text-gray-600 text-center">
         Shortcut: <span className="font-semibold">{shortcut}</span>
-      </p>
+        {shortcut === NotSet && (
+          <button
+            onClick={openShortcutSettings}
+            className="ml-2 text-blue-500 underline cursor-pointer">
+            Set shortcut
+          </button>
+        )}
+      </div>
     </div>
   )
 }

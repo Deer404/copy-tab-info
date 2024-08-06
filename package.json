@@ -1,6 +1,6 @@
 {
-  "name": "copy-tab",
-  "displayName": "Copy tab",
+  "name": "copy-tab-info",
+  "displayName": "Copy Tab Info",
   "version": "0.0.1",
   "description": "Copy current Tab title and url",
   "author": "Deer404",

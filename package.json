@@ -3,7 +3,7 @@
   "displayName": "Copy tab",
   "version": "0.0.1",
   "description": "Copy current Tab title and url",
-  "author": "Deer404(deer404@deer404.com)",
+  "author": "Deer404",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "plasmo": "0.88.0",
+    "punycode": "^2.3.1",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
@@ -20,12 +21,30 @@
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
     "prettier": "3.2.4",
+    "tailwindcss": "^3.4.7",
     "typescript": "5.3.3"
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
-    ]
+      "<all_urls>"
+    ],
+    "permissions": [
+      "tabs",
+      "clipboardWrite",
+      "commands",
+      "scripting"
+    ],
+    "commands": {
+      "copy-tab-info": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+P",
+          "mac": "Command+Shift+P"
+        },
+        "description": "Copy tab information"
+      }
+    }
   }
 }

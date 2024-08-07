@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import "./style.css"
+import "../css/index.css"
 
 const NoSet = "Not set"
 
@@ -8,17 +8,20 @@ export default function Popup() {
   const [tabInfo, setTabInfo] = useState({
     title: "",
     url: "",
-    urlNoParams: ""
+    urlNoParams: "",
+    protocol: ""
   })
   const [copied, setCopied] = useState({
     full: false,
     noParams: false,
-    markdown: false
+    markdown: false,
+    custom: false
   })
   const [shortcuts, setShortcuts] = useState({
     copy: NoSet,
     copyNoParams: NoSet,
-    markdown: NoSet
+    markdown: NoSet,
+    custom: NoSet
   })
 
   useEffect(() => {
@@ -28,7 +31,8 @@ export default function Popup() {
         setTabInfo({
           title: tabs[0].title,
           url: url.href,
-          urlNoParams: `${url.origin}${url.pathname}`
+          urlNoParams: `${url.origin}${url.pathname}`,
+          protocol: url.protocol
         })
       }
     })
@@ -42,6 +46,8 @@ export default function Popup() {
           updatedShortcuts.copyNoParams = command.shortcut || NoSet
         else if (command.name === "copy-tab-info-markdown")
           updatedShortcuts.markdown = command.shortcut || NoSet
+        else if (command.name === "copy-tab-info-custom")
+          updatedShortcuts.custom = command.shortcut || NoSet
       })
       setShortcuts(updatedShortcuts)
     })
@@ -53,11 +59,34 @@ export default function Popup() {
     else if (type === "noParams")
       text = `${tabInfo.title}\n${tabInfo.urlNoParams}`
     else if (type === "markdown") text = `[${tabInfo.title}](${tabInfo.url})`
+    else if (type === "custom") {
+      if (tabInfo.protocol.startsWith("chrome:")) return
+      chrome.runtime.sendMessage({ action: "copyCustomFormat" }, (response) => {
+        if (response && response.success) {
+          setCopied({ ...copied, custom: true })
+          setTimeout(
+            () => setCopied((prev) => ({ ...prev, custom: false })),
+            2000
+          )
+        } else {
+          console.error("Failed to copy custom format:", response?.error)
+        }
+      })
+      return
+    }
 
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied({ ...copied, [type]: true })
-      setTimeout(() => setCopied((prev) => ({ ...prev, [type]: false })), 2000)
-    })
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        setCopied({ ...copied, [type]: true })
+        setTimeout(
+          () => setCopied((prev) => ({ ...prev, [type]: false })),
+          2000
+        )
+      })
+      .catch((err) => {
+        console.error("Failed to copy to clipboard:", err)
+      })
   }
 
   const openOptionsPage = () => {
@@ -75,61 +104,72 @@ export default function Popup() {
         </p>
         <p className="text-gray-600 text-sm break-all">{tabInfo.url}</p>
       </div>
-      <button
-        onClick={() => copyToClipboard("full")}
-        className={`w-full flex justify-center items-center gap-2 ${
-          copied.full
-            ? "bg-green-500"
-            : "bg-gradient-to-r from-blue-400 to-indigo-500"
-        } text-white border-none py-2.5 px-4 rounded-md cursor-pointer transition-all duration-300 hover:opacity-90 mb-3 shadow-sm`}>
-        <span className="font-medium">
-          {copied.full ? "Copied!" : "Copy Full URL"}
-        </span>
-        {shortcuts.copy !== NoSet && (
-          <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
-            {shortcuts.copy}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => copyToClipboard("noParams")}
-        className={`w-full flex justify-center items-center gap-2 ${
-          copied.noParams
-            ? "bg-green-500"
-            : "bg-gradient-to-r from-purple-400 to-pink-500"
-        } text-white border-none py-2.5 px-4 rounded-md cursor-pointer transition-all duration-300 hover:opacity-90 mb-3 shadow-sm`}>
-        <span className="font-medium">
-          {copied.noParams ? "Copied!" : "Copy URL (No Params)"}
-        </span>
-        {shortcuts.copyNoParams !== NoSet && (
-          <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
-            {shortcuts.copyNoParams}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => copyToClipboard("markdown")}
-        className={`w-full flex justify-center items-center gap-2 ${
-          copied.markdown
-            ? "bg-green-500"
-            : "bg-gradient-to-r from-yellow-400 to-orange-500"
-        } text-white border-none py-2.5 px-4 rounded-md cursor-pointer transition-all duration-300 hover:opacity-90 mb-3 shadow-sm`}>
-        <span className="font-medium">
-          {copied.markdown ? "Markdown Copied!" : "Copy as Markdown"}
-        </span>
-        {shortcuts.markdown !== NoSet && (
-          <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
-            {shortcuts.markdown}
-          </span>
-        )}
-      </button>
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <CopyButton
+          onClick={() => copyToClipboard("full")}
+          copied={copied.full}
+          shortcut={shortcuts.copy}
+          label="Full URL"
+          color="from-blue-400 to-indigo-500"
+        />
+        <CopyButton
+          onClick={() => copyToClipboard("noParams")}
+          copied={copied.noParams}
+          shortcut={shortcuts.copyNoParams}
+          label="No Params"
+          color="from-purple-400 to-pink-500"
+        />
+        <CopyButton
+          onClick={() => copyToClipboard("markdown")}
+          copied={copied.markdown}
+          shortcut={shortcuts.markdown}
+          label="Markdown"
+          color="from-yellow-400 to-orange-500"
+        />
+        <CopyButton
+          disabled={tabInfo.protocol.startsWith("chrome:")}
+          onClick={() => copyToClipboard("custom")}
+          copied={copied.custom}
+          shortcut={shortcuts.custom}
+          label="Custom"
+          color="from-teal-400 to-cyan-500"
+        />
+      </div>
       <div className="text-center mt-2">
         <button
           onClick={openOptionsPage}
           className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
-          Customize Shortcuts
+          Customize Options
         </button>
       </div>
     </div>
+  )
+}
+
+function CopyButton({
+  onClick,
+  copied,
+  shortcut,
+  label,
+  color,
+  disabled = false
+}) {
+  const buttonClass = `flex flex-col justify-center items-center p-2 ${
+    copied ? "bg-green-500" : `bg-gradient-to-r ${color}`
+  } text-white rounded-md transition-all duration-300 hover:opacity-90`
+  const diasbledClass =
+    "flex flex-col justify-center items-center p-2 cursor-not-allowed bg-gray-400 rounded-md p-2 text-white"
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={disabled ? diasbledClass : buttonClass}>
+      <span className="font-medium text-sm">{copied ? "Copied!" : label}</span>
+      {shortcut !== NoSet && (
+        <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded mt-1">
+          {shortcut}
+        </span>
+      )}
+    </button>
   )
 }

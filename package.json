@@ -1,7 +1,7 @@
 {
   "name": "copy-tab-info",
   "displayName": "Copy Tab Info",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Copy current Tab title and url",
   "author": "Deer404",
   "scripts": {
@@ -35,7 +35,8 @@
       "activeTab",
       "clipboardWrite",
       "commands",
-      "scripting"
+      "scripting",
+      "storage"
     ],
     "commands": {
       "copy-tab-info": {
@@ -58,6 +59,9 @@
           "mac": "Command+Shift+M"
         },
         "description": "Copy Tab Information as Markdown"
+      },
+      "copy-tab-info-custom": {
+        "description": "Copy custom tab info"
       }
     }
   }

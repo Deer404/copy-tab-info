@@ -2,12 +2,15 @@ import { useEffect, useState } from "react"
 
 import "./style.css"
 
-const NotSet = "Not set"
-
+const NoSet = "Not set"
 export default function Popup() {
   const [tabInfo, setTabInfo] = useState({ title: "", url: "" })
-  const [shortcut, setShortcut] = useState(NotSet)
   const [copied, setCopied] = useState(false)
+  const [copiedMarkdown, setCopiedMarkdown] = useState(false)
+  const [shortcuts, setShortcuts] = useState({
+    copy: NoSet,
+    markdown: NoSet
+  })
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -20,14 +23,15 @@ export default function Popup() {
     })
 
     chrome.commands.getAll((commands) => {
-      const copyCommand = commands.find(
-        (command) => command.name === "copy-tab-info"
-      )
-      if (copyCommand && copyCommand.shortcut) {
-        setShortcut(copyCommand.shortcut)
-      } else {
-        setShortcut(NotSet)
-      }
+      const updatedShortcuts = { ...shortcuts }
+      commands.forEach((command) => {
+        if (command.name === "copy-tab-info") {
+          updatedShortcuts.copy = command.shortcut || NoSet
+        } else if (command.name === "copy-tab-info-markdown") {
+          updatedShortcuts.markdown = command.shortcut || NoSet
+        }
+      })
+      setShortcuts(updatedShortcuts)
     })
   }, [])
 
@@ -35,12 +39,20 @@ export default function Popup() {
     const text = `${tabInfo.title}\n${tabInfo.url}`
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000) // Reset after 2 seconds
+      setTimeout(() => setCopied(false), 2000)
     })
   }
 
-  const openShortcutSettings = () => {
-    chrome.tabs.create({ url: "chrome://extensions/shortcuts" })
+  const copyAsMarkdown = () => {
+    const markdownText = `[${tabInfo.title}](${tabInfo.url})`
+    navigator.clipboard.writeText(markdownText).then(() => {
+      setCopiedMarkdown(true)
+      setTimeout(() => setCopiedMarkdown(false), 2000)
+    })
+  }
+
+  const openOptionsPage = () => {
+    chrome.runtime.openOptionsPage()
   }
 
   return (
@@ -56,22 +68,34 @@ export default function Popup() {
       </div>
       <button
         onClick={copyToClipboard}
-        className={`w-full ${
+        className={`w-full flex flex-row justify-center items-center gap-2 ${
           copied
             ? "bg-green-500"
             : "bg-gradient-to-r from-blue-500 to-purple-600"
         } text-white border-none py-2 px-3 rounded cursor-pointer transition-all duration-300 hover:opacity-90 mb-2`}>
-        {copied ? "Copied!" : "Copy"}
+        <span className="block">{copied ? "Copied!" : "Copy"}</span>
+        <span className="text-xs block opacity-80">{shortcuts.copy}</span>
       </button>
-      <div className="text-sm text-gray-600 text-center">
-        Shortcut: <span className="font-semibold">{shortcut}</span>
-        {shortcut === NotSet && (
-          <button
-            onClick={openShortcutSettings}
-            className="ml-2 text-blue-500 underline cursor-pointer">
-            Set shortcut
-          </button>
-        )}
+      <button
+        onClick={copyAsMarkdown}
+        className={`w-full flex flex-row justify-center items-center gap-2 ${
+          copiedMarkdown
+            ? "bg-green-500"
+            : "bg-gradient-to-r from-purple-500 to-indigo-600"
+        } text-white border-none py-2 px-3 rounded cursor-pointer transition-all duration-300 hover:opacity-90 mb-2`}>
+        <span className="block">
+          {copiedMarkdown ? "Markdown Copied!" : "Copy as Markdown"}
+        </span>
+        <span className="text-xs block opacity-80">
+          {shortcuts.markdown !== NoSet && shortcuts.markdown}
+        </span>
+      </button>
+      <div className="text-center mt-4">
+        <button
+          onClick={openOptionsPage}
+          className="text-blue-600 hover:text-blue-800 underline cursor-pointer">
+          Customize Shortcuts
+        </button>
       </div>
     </div>
   )

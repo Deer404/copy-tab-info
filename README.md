@@ -18,7 +18,7 @@
 
 1. 克隆此仓库到本地
 2. 运行 `npm install` 安装依赖
-3. 运行 `npm run dev` 构建扩展
+3. 运行 `npm run build` 构建扩展
 4. 在Chrome浏览器中打开 `chrome://extensions/`
 5. 启用"开发者模式"
 6. 点击"加载已解压的扩展程序"，选择项目的 `build/chrome-mv3-prod` 目录

@@ -127,7 +127,7 @@ export default function Popup() {
           color="from-yellow-400 to-orange-500"
         />
         <CopyButton
-          disabled={tabInfo.protocol.startsWith("chrome:")}
+          disabled={tabInfo.protocol.startsWith("chrome")}
           onClick={() => copyToClipboard("custom")}
           copied={copied.custom}
           shortcut={shortcuts.custom}

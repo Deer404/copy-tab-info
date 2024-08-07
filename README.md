@@ -1,33 +1,42 @@
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+# Copy Tab Info Chrome 扩展
 
-## Getting Started
+## 扩展地址
+审核中，等待上架。
 
-First, run the development server:
+这是一个使用Plasmo框架开发的Chrome浏览器扩展。它允许用户快速复制当前标签页的标题和URL。
 
-```bash
-pnpm dev
-# or
-npm run dev
-```
+## 主要功能
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+- 一键复制当前标签页的标题和URL
+- 支持自定义快捷键设置
 
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
+## 技术栈
 
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
+- [Plasmo](https://docs.plasmo.com/) - Chrome扩展开发框架
 
-## Making production build
+## 安装
 
-Run the following:
+1. 克隆此仓库到本地
+2. 运行 `npm install` 安装依赖
+3. 运行 `npm run build` 构建扩展
+4. 在Chrome浏览器中打开 `chrome://extensions/`
+5. 启用"开发者模式"
+6. 点击"加载已解压的扩展程序"，选择项目的 `build/chrome-mv3-prod` 目录
 
-```bash
-pnpm build
-# or
-npm run build
-```
+## 使用方法
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores.
+1. 点击扩展图标复制当前标签页信息
+2. 使用设置的快捷键复制标签页信息
 
-## Submit to the webstores
+## 自定义快捷键
 
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+1. 在Chrome浏览器中打开 `chrome://extensions/shortcuts`
+2. 找到本扩展，设置您喜欢的快捷键
+
+## 贡献
+
+欢迎提交问题和拉取请求。
+
+## 许可证
+
+[MIT](https://choosealicense.com/licenses/mit/)

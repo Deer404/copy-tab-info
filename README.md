@@ -18,7 +18,7 @@
 
 1. 克隆此仓库到本地
 2. 运行 `npm install` 安装依赖
-3. 运行 `npm run build` 构建扩展
+3. 运行 `npm run dev` 构建扩展
 4. 在Chrome浏览器中打开 `chrome://extensions/`
 5. 启用"开发者模式"
 6. 点击"加载已解压的扩展程序"，选择项目的 `build/chrome-mv3-prod` 目录
@@ -39,4 +39,24 @@
 
 ## 许可证
 
-[MIT](https://choosealicense.com/licenses/mit/)
+MIT License
+
+Copyright (c) [2024] [Deer404]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

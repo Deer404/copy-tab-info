@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 
 import "../css/index.css"
 
-import { DefaultOptions } from "~constant/custom"
+import { DefaultOptions, storage, STORE_KEYS } from "~constant/index"
 
 const Options = () => {
   const [shortcuts, setShortcuts] = useState({
@@ -27,11 +27,11 @@ const Options = () => {
       })
       setShortcuts(updatedShortcuts)
     })
+    const result = storage.get<object>(STORE_KEYS).then((result) => {
+      const res = result ?? DefaultOptions
 
-    // 从存储中加载自定义选项
-    chrome.storage.sync.get("customOptions", (result) => {
-      if (result.customOptions) {
-        setCustomOptions({ ...customOptions, ...result.customOptions })
+      if (res) {
+        setCustomOptions({ ...customOptions, ...res })
       }
     })
   }, [])
@@ -47,13 +47,14 @@ const Options = () => {
     setSaveStatus("")
   }
 
-  const saveCustomOptions = () => {
-    chrome.storage.sync.set({ customOptions }, () => {
-      setUnsavedChanges(false)
-      setSaveStatus("Saved successfully!")
-      setTimeout(() => setSaveStatus(""), 2000) // 2秒后清除状态消息
-    })
+  const saveCustomOptions = async () => {
+    await storage.set(STORE_KEYS, customOptions)
+    setUnsavedChanges(false)
+    setSaveStatus("Saved successfully!")
+    setTimeout(() => setSaveStatus(""), 2000)
   }
+
+  console.log("customOptions", customOptions)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">

@@ -1,7 +1,6 @@
-import iconImage from "data-base64:~assets/icon.png"
 import type { PlasmoCSConfig } from "plasmo"
 
-import { DefaultOptions } from "~constant/custom"
+import { ACTION_TYPES, COMMANDS, DefaultOptions } from "~constant/index"
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"]
@@ -26,31 +25,41 @@ function handleCommand(command: string) {
       }
 
       let text = ""
-      if (command === "copy-tab-info") {
-        text = `${tabInfo.title}\n${tabInfo.url}`
-      } else if (command === "copy-tab-info-no-params") {
-        text = `${tabInfo.title}\n${tabInfo.urlNoParams}`
-      } else if (command === "copy-tab-info-markdown") {
-        text = `[${tabInfo.title}](${tabInfo.url})`
-      } else if (command === "copy-tab-info-custom") {
-        chrome.storage.sync.get("customOptions", (result) => {
-          const customOptions = result.customOptions || DefaultOptions
+      switch (command) {
+        case COMMANDS.COPY_TAB_INFO:
+          text = `${tabInfo.title}\n${tabInfo.url}`
+          break
+        case COMMANDS.COPY_TAB_INFO_NO_PARAMS:
+          text = `${tabInfo.title}\n${tabInfo.urlNoParams}`
+          break
+        case COMMANDS.COPY_TAB_INFO_MARKDOWN:
+          text = `[${tabInfo.title}](${tabInfo.url})`
+          break
+        case COMMANDS.COPY_TAB_INFO_CUSTOM:
+          chrome.storage.sync.get("customOptions", (result) => {
+            if (chrome.runtime.lastError) {
+              console.error(
+                "Failed to retrieve custom options: ",
+                chrome.runtime.lastError
+              )
+              return
+            }
+            const customOptions = result.customOptions || DefaultOptions
+            const parts = []
+            if (customOptions.protocol) parts.push(`${tabInfo.protocol}//`)
+            if (customOptions.hostname) parts.push(tabInfo.hostname)
+            if (customOptions.pathname) parts.push(tabInfo.pathname)
+            if (customOptions.hash) parts.push(tabInfo.hash)
+            if (customOptions.params && tabInfo.hash !== "")
+              parts.push(tabInfo.params)
 
-          const parts = []
-          if (customOptions.protocol) parts.push(`${tabInfo.protocol}//`)
-          if (customOptions.hostname) parts.push(tabInfo.hostname)
-          if (customOptions.pathname) parts.push(tabInfo.pathname)
-          if (customOptions.hash) parts.push(tabInfo.hash)
-          if (customOptions.params && url.hash != "") parts.push(tabInfo.params)
-
-          text = `${tabInfo.title}\n${parts.join("")}`
-
-          copyTextToClipboard(tabs[0].id, text)
-        })
-      } else {
-        return
+            text = `${tabInfo.title}\n${parts.join("")}`
+            copyTextToClipboard(tabs[0].id, text)
+          })
+          return // Exit early since this is asynchronous
+        default:
+          return
       }
-
       copyTextToClipboard(tabs[0].id, text)
     }
   })
@@ -59,6 +68,9 @@ function handleCommand(command: string) {
 chrome.commands.onCommand.addListener(handleCommand)
 
 function copyTextToClipboard(tabId: number, text: string) {
+  if (!text) {
+    return
+  }
   chrome.scripting.executeScript(
     {
       target: { tabId: tabId },
@@ -82,14 +94,13 @@ function copyTextToClipboard(tabId: number, text: string) {
   )
 }
 
-// 处理来自popup的消息
+// Handle messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "copyCustomFormat") {
-    handleCommand("copy-tab-info-custom")
-    // 延迟发送响应，给予足够的时间执行复制操作
+  if (request.action === ACTION_TYPES.COPY_TAB_CUSTOM) {
+    handleCommand(COMMANDS.COPY_TAB_INFO_CUSTOM)
     setTimeout(() => {
       sendResponse({ success: true })
     }, 100)
-    return true // 表示我们会异步发送响应
+    return true // Indicates that we will send a response asynchronously
   }
 })

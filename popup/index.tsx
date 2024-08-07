@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 
 import "../css/index.css"
 
+import { ACTION_TYPES } from "~constant"
+
 const NoSet = "Not set"
 
 export default function Popup() {
@@ -61,17 +63,20 @@ export default function Popup() {
     else if (type === "markdown") text = `[${tabInfo.title}](${tabInfo.url})`
     else if (type === "custom") {
       if (tabInfo.protocol.startsWith("chrome")) return
-      chrome.runtime.sendMessage({ action: "copyCustomFormat" }, (response) => {
-        if (response && response.success) {
-          setCopied({ ...copied, custom: true })
-          setTimeout(
-            () => setCopied((prev) => ({ ...prev, custom: false })),
-            2000
-          )
-        } else {
-          console.error("Failed to copy custom format:", response?.error)
+      chrome.runtime.sendMessage(
+        { action: ACTION_TYPES.COPY_TAB_CUSTOM },
+        (response) => {
+          if (response && response.success) {
+            setCopied({ ...copied, custom: true })
+            setTimeout(
+              () => setCopied((prev) => ({ ...prev, custom: false })),
+              2000
+            )
+          } else {
+            console.error("Failed to copy custom format:", response?.error)
+          }
         }
-      })
+      )
       return
     }
 

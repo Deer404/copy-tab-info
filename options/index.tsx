@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 
-import "./style.css" // 假设你有一个样式文件
+import "./style.css"
 
 const Options = () => {
   const [shortcuts, setShortcuts] = useState({
@@ -9,7 +9,6 @@ const Options = () => {
   })
 
   useEffect(() => {
-    // 获取当前的快捷键设置
     chrome.commands.getAll((commands) => {
       const updatedShortcuts = { ...shortcuts }
       commands.forEach((command) => {
@@ -26,34 +25,64 @@ const Options = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-4">CopyTab Options</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl font-extrabold text-gray-900 text-center mb-8">
+          CopyTab Options
+        </h1>
 
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <h2 className="text-xl font-semibold mb-4">Keyboard Shortcuts</h2>
-        <div className="mb-4">
-          <p className="mb-2">
-            <strong>Copy tab information:</strong> {shortcuts["copy-tab-info"]}
-          </p>
-          <p className="mb-2">
-            <strong>Copy tab information as Markdown:</strong>{" "}
-            {shortcuts["copy-tab-info-markdown"]}
-          </p>
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
+          <div className="px-6 py-4 bg-indigo-600">
+            <h2 className="text-xl font-semibold text-white">
+              Keyboard Shortcuts
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4 mb-6">
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  Copy tab information
+                </p>
+                <p className="mt-1 text-lg font-semibold text-gray-900">
+                  {shortcuts["copy-tab-info"]}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  Copy tab information as Markdown
+                </p>
+                <p className="mt-1 text-lg font-semibold text-gray-900">
+                  {shortcuts["copy-tab-info-markdown"]}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={openShortcutSettings}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Change Shortcuts
+            </button>
+          </div>
         </div>
-        <button
-          onClick={openShortcutSettings}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-          Change Shortcuts
-        </button>
-      </div>
 
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <h2 className="text-xl font-semibold mb-4">About</h2>
-        <p>
-          CopyTab allows you to quickly copy your current tab's information. Use
-          the keyboard shortcuts to copy the information in plain text or
-          Markdown format.
-        </p>
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="px-6 py-4 bg-gray-800">
+            <h2 className="text-xl font-semibold text-white">About CopyTab</h2>
+          </div>
+          <div className="p-6">
+            <p className="text-gray-700 mb-4">
+              CopyTab allows you to quickly copy your current tab's information.
+              Use the keyboard shortcuts to copy the information in plain text
+              or Markdown format.
+            </p>
+            <a
+              href="https://github.com/Deer404/copy-tab-info"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 hover:text-indigo-800 font-medium">
+              View GitHub Repository
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   )

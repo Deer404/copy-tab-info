@@ -56,44 +56,50 @@ export default function Popup() {
   }
 
   return (
-    <div className="w-[300px] p-4 font-sans bg-gradient-to-br from-[#f5f7fa] to-[#c3cfe2] rounded-lg shadow-md">
-      <h2 className="text-center text-lg font-bold text-gray-800 mb-4">
+    <div className="w-[300px] p-4 font-sans bg-gradient-to-br from-[#e0eafc] to-[#cfdef3] rounded-lg shadow-lg">
+      <h2 className="text-center text-xl font-bold text-gray-800 mb-4">
         CopyTab
       </h2>
-      <div className="bg-white bg-opacity-80 p-3 rounded mb-3">
+      <div className="bg-white bg-opacity-90 p-3 rounded-md shadow-sm mb-4">
         <p className="font-bold text-gray-800 mb-1 break-words">
           {tabInfo.title}
         </p>
-        <p className="text-gray-600 break-all">{tabInfo.url}</p>
+        <p className="text-gray-600 text-sm break-all">{tabInfo.url}</p>
       </div>
       <button
         onClick={copyToClipboard}
-        className={`w-full flex flex-row justify-center items-center gap-2 ${
+        className={`w-full flex justify-center items-center gap-2 ${
           copied
             ? "bg-green-500"
-            : "bg-gradient-to-r from-blue-500 to-purple-600"
-        } text-white border-none py-2 px-3 rounded cursor-pointer transition-all duration-300 hover:opacity-90 mb-2`}>
-        <span className="block">{copied ? "Copied!" : "Copy"}</span>
-        <span className="text-xs block opacity-80">{shortcuts.copy}</span>
+            : "bg-gradient-to-r from-blue-400 to-indigo-500"
+        } text-white border-none py-2.5 px-4 rounded-md cursor-pointer transition-all duration-300 hover:opacity-90 mb-3 shadow-sm`}>
+        <span className="font-medium">{copied ? "Copied!" : "Copy"}</span>
+        {shortcuts.copy !== NoSet && (
+          <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
+            {shortcuts.copy}
+          </span>
+        )}
       </button>
       <button
         onClick={copyAsMarkdown}
-        className={`w-full flex flex-row justify-center items-center gap-2 ${
+        className={`w-full flex justify-center items-center gap-2 ${
           copiedMarkdown
             ? "bg-green-500"
-            : "bg-gradient-to-r from-purple-500 to-indigo-600"
-        } text-white border-none py-2 px-3 rounded cursor-pointer transition-all duration-300 hover:opacity-90 mb-2`}>
-        <span className="block">
+            : "bg-gradient-to-r from-purple-400 to-pink-500"
+        } text-white border-none py-2.5 px-4 rounded-md cursor-pointer transition-all duration-300 hover:opacity-90 mb-3 shadow-sm`}>
+        <span className="font-medium">
           {copiedMarkdown ? "Markdown Copied!" : "Copy as Markdown"}
         </span>
-        <span className="text-xs block opacity-80">
-          {shortcuts.markdown !== NoSet && shortcuts.markdown}
-        </span>
+        {shortcuts.markdown !== NoSet && (
+          <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
+            {shortcuts.markdown}
+          </span>
+        )}
       </button>
-      <div className="text-center mt-4">
+      <div className="text-center mt-2">
         <button
           onClick={openOptionsPage}
-          className="text-blue-600 hover:text-blue-800 underline cursor-pointer">
+          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
           Customize Shortcuts
         </button>
       </div>

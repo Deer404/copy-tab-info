@@ -46,6 +46,10 @@
         "description": "Copy Tab Information"
       },
       "copy-tab-info-no-params": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+U",
+          "mac": "Command+Shift+U"
+        },
         "description": "Copy Tab Information (No Parameters)"
       },
       "copy-tab-info-markdown": {

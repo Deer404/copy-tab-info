@@ -45,6 +45,9 @@
         },
         "description": "Copy Tab Information"
       },
+      "copy-tab-info-no-params": {
+        "description": "Copy Tab Information (No Parameters)"
+      },
       "copy-tab-info-markdown": {
         "suggested_key": {
           "default": "Ctrl+Shift+M",

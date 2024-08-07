@@ -7,15 +7,18 @@ export const config: PlasmoCSConfig = {
 chrome.commands.onCommand.addListener((command) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]) {
+      const url = new URL(tabs[0].url ?? "")
       const tabInfo = {
         title: tabs[0].title,
-        url: new URL(tabs[0].url ?? "").href
+        url: url.href,
+        urlNoParams: `${url.origin}${url.pathname}`
       }
 
-      let text: string
-
+      let text = ""
       if (command === "copy-tab-info") {
         text = `${tabInfo.title}\n${tabInfo.url}`
+      } else if (command === "copy-tab-info-no-params") {
+        text = `${tabInfo.title}\n${tabInfo.urlNoParams}`
       } else if (command === "copy-tab-info-markdown") {
         text = `[${tabInfo.title}](${tabInfo.url})`
       } else {

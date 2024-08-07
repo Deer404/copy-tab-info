@@ -5,6 +5,7 @@ import "./style.css"
 const Options = () => {
   const [shortcuts, setShortcuts] = useState({
     "copy-tab-info": "Not set",
+    "copy-tab-info-no-params": "Not set",
     "copy-tab-info-markdown": "Not set"
   })
 
@@ -41,10 +42,18 @@ const Options = () => {
             <div className="space-y-4 mb-6">
               <div>
                 <p className="text-sm font-medium text-gray-500">
-                  Copy tab information
+                  Copy tab information (Full URL)
                 </p>
                 <p className="mt-1 text-lg font-semibold text-gray-900">
                   {shortcuts["copy-tab-info"]}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  Copy tab information (No Parameters)
+                </p>
+                <p className="mt-1 text-lg font-semibold text-gray-900">
+                  {shortcuts["copy-tab-info-no-params"]}
                 </p>
               </div>
               <div>
@@ -71,8 +80,8 @@ const Options = () => {
           <div className="p-6">
             <p className="text-gray-700 mb-4">
               CopyTab allows you to quickly copy your current tab's information.
-              Use the keyboard shortcuts to copy the information in plain text
-              or Markdown format.
+              Use the keyboard shortcuts to copy the information in full URL,
+              URL without parameters, or Markdown format.
             </p>
             <a
               href="https://github.com/Deer404/copy-tab-info"

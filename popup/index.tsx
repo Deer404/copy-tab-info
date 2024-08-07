@@ -60,7 +60,7 @@ export default function Popup() {
       text = `${tabInfo.title}\n${tabInfo.urlNoParams}`
     else if (type === "markdown") text = `[${tabInfo.title}](${tabInfo.url})`
     else if (type === "custom") {
-      if (tabInfo.protocol.startsWith("chrome:")) return
+      if (tabInfo.protocol.startsWith("chrome")) return
       chrome.runtime.sendMessage({ action: "copyCustomFormat" }, (response) => {
         if (response && response.success) {
           setCopied({ ...copied, custom: true })

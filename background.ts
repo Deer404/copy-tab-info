@@ -11,7 +11,7 @@ function handleCommand(command: string) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]) {
       const url = new URL(tabs[0].url ?? "")
-      if (url.protocol.startsWith("chrome:")) {
+      if (url.protocol.startsWith("chrome")) {
         return
       }
       const tabInfo = {

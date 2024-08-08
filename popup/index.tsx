@@ -98,7 +98,8 @@ export default function Popup() {
 
   const generateCustomText = (
     tabInfo: TabInfo,
-    options: typeof DefaultOptions
+    options: typeof DefaultOptions,
+    hasTitle = true
   ) => {
     let text = ""
     let result = []
@@ -107,7 +108,7 @@ export default function Popup() {
     if (options.pathname) result.push(tabInfo.pathname)
     if (options.hash) result.push(tabInfo.hash)
     if (options.params && tabInfo.hash !== "") result.push(tabInfo.params)
-    if (options.title) text = `${tabInfo.title}\n${result.join("")}`
+    if (options.title && hasTitle) text = `${tabInfo.title}\n${result.join("")}`
     else text = `${result.join("")}`
     return text
   }
@@ -147,7 +148,7 @@ export default function Popup() {
     setActiveTab("custom")
   }
 
-  const customPreviewText = generateCustomText(tabInfo, customOptions)
+  const customPreviewText = generateCustomText(tabInfo, customOptions, false)
 
   return (
     <div className="w-[300px] p-4 font-sans bg-gradient-to-br from-[#e0eafc] to-[#cfdef3] rounded-lg shadow-lg">
@@ -190,7 +191,7 @@ export default function Popup() {
         ) : (
           <>
             <p className="font-bold text-gray-800 mb-1 break-words">
-              {customOptions.title ? tabInfo.title : undefined}
+              {customOptions.title ? tabInfo.title : ""}
             </p>
             <p className="text-gray-600 text-sm break-all">
               {customPreviewText}

@@ -1,7 +1,7 @@
 {
   "name": "copy-tab-info",
   "displayName": "Copy Tab Info",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Copy current Tab title and url",
   "author": "Deer404",
   "scripts": {

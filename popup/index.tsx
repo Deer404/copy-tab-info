@@ -107,7 +107,7 @@ export default function Popup() {
     if (options.hostname) result.push(tabInfo.hostname)
     if (options.pathname) result.push(tabInfo.pathname)
     if (options.hash) result.push(tabInfo.hash)
-    if (options.params && tabInfo.hash !== "") result.push(tabInfo.params)
+    if (options.params) result.push(tabInfo.params)
     if (options.title && hasTitle) text = `${tabInfo.title}\n${result.join("")}`
     else text = `${result.join("")}`
     return text

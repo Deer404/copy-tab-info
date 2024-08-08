@@ -46,7 +46,7 @@ function handleCommand(command: string) {
           if (options.hostname) result.push(tabInfo.hostname)
           if (options.pathname) result.push(tabInfo.pathname)
           if (options.hash) result.push(tabInfo.hash)
-          if (options.params && tabInfo.hash !== "") result.push(tabInfo.params)
+          if (options.params) result.push(tabInfo.params)
           if (options.title) text = `${tabInfo.title}\n${result.join("")}`
           else text = `${result.join("")}`
           copyTextToClipboard(tabs[0].id, text)

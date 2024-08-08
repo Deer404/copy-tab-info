@@ -20,7 +20,6 @@ export const DefaultOptions: OptionType = {
 
 export const COMMANDS = {
   COPY_TAB_INFO: "copy-tab-info",
-  COPY_TAB_INFO_NO_PARAMS: "copy-tab-info-no-params",
   COPY_TAB_INFO_MARKDOWN: "copy-tab-info-markdown",
   COPY_TAB_INFO_CUSTOM: "copy-tab-info-custom"
 }

@@ -1,7 +1,7 @@
 {
   "name": "copy-tab-info",
   "displayName": "Copy Tab Info",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Copy current Tab title and url",
   "author": "Deer404",
   "scripts": {
@@ -46,13 +46,6 @@
           "mac": "Command+Shift+P"
         },
         "description": "Copy Tab Information"
-      },
-      "copy-tab-info-no-params": {
-        "suggested_key": {
-          "default": "Ctrl+Shift+U",
-          "mac": "Command+Shift+U"
-        },
-        "description": "Copy Tab Information (No Parameters)"
       },
       "copy-tab-info-markdown": {
         "suggested_key": {

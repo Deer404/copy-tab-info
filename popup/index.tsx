@@ -29,11 +29,7 @@ interface TabInfo {
 
   params?: string
 }
-const renderCommands = [
-  COMMANDS.COPY_TAB_INFO,
-  COMMANDS.COPY_TAB_INFO_NO_PARAMS,
-  COMMANDS.COPY_TAB_INFO_MARKDOWN
-]
+const renderCommands = [COMMANDS.COPY_TAB_INFO, COMMANDS.COPY_TAB_INFO_MARKDOWN]
 export default function Popup() {
   const [tabInfo, setTabInfo] = useState<TabInfo>({
     title: "",
@@ -87,7 +83,6 @@ export default function Popup() {
   const copyToClipboard = (command: string) => {
     const texts = {
       [COMMANDS.COPY_TAB_INFO]: `${tabInfo.title}\n${tabInfo.url}`,
-      [COMMANDS.COPY_TAB_INFO_NO_PARAMS]: `${tabInfo.title}\n${tabInfo.urlNoParams}`,
       [COMMANDS.COPY_TAB_INFO_MARKDOWN]: `[${tabInfo.title}](${tabInfo.url})`,
       [COMMANDS.COPY_TAB_INFO_CUSTOM]: generateCustomText(
         tabInfo,
@@ -129,7 +124,6 @@ export default function Popup() {
   const getLabelForCommand = (command: string) => {
     const labels = {
       [COMMANDS.COPY_TAB_INFO]: "Full URL",
-      [COMMANDS.COPY_TAB_INFO_NO_PARAMS]: "No Params",
       [COMMANDS.COPY_TAB_INFO_MARKDOWN]: "Markdown",
       [COMMANDS.COPY_TAB_INFO_CUSTOM]: "Custom"
     }
@@ -139,7 +133,6 @@ export default function Popup() {
   const getColorForCommand = (command: string) => {
     const colors = {
       [COMMANDS.COPY_TAB_INFO]: "from-blue-400 to-indigo-500",
-      [COMMANDS.COPY_TAB_INFO_NO_PARAMS]: "from-purple-400 to-pink-500",
       [COMMANDS.COPY_TAB_INFO_MARKDOWN]: "from-yellow-400 to-orange-500",
       [COMMANDS.COPY_TAB_INFO_CUSTOM]: "from-teal-400 to-cyan-500"
     }

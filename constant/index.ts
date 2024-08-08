@@ -1,6 +1,15 @@
 import { Storage } from "@plasmohq/storage"
 
-export const DefaultOptions = {
+export type OptionType = {
+  title: boolean
+  hostname: boolean
+  pathname: boolean
+  hash: boolean
+  params: boolean
+  protocol: boolean
+}
+
+export const DefaultOptions: OptionType = {
   title: true,
   hostname: true,
   pathname: true,
@@ -21,5 +30,6 @@ export const ACTION_TYPES = {
 }
 
 export const STORE_KEYS = "customOptions"
+export const NoSetText = "Not set"
 
 export const storage = new Storage()

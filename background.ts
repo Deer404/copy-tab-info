@@ -1,13 +1,20 @@
 import type { PlasmoCSConfig } from "plasmo"
 
-import { ACTION_TYPES, COMMANDS, DefaultOptions } from "~constant/index"
+import {
+  ACTION_TYPES,
+  COMMANDS,
+  DefaultOptions,
+  storage,
+  STORE_KEYS,
+  type OptionType
+} from "~constant/index"
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"]
 }
 
 function handleCommand(command: string) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
     if (tabs[0]) {
       const url = new URL(tabs[0].url ?? "")
       if (url.protocol.startsWith("chrome")) {
@@ -36,26 +43,16 @@ function handleCommand(command: string) {
           text = `[${tabInfo.title}](${tabInfo.url})`
           break
         case COMMANDS.COPY_TAB_INFO_CUSTOM:
-          chrome.storage.sync.get("customOptions", (result) => {
-            if (chrome.runtime.lastError) {
-              console.error(
-                "Failed to retrieve custom options: ",
-                chrome.runtime.lastError
-              )
-              return
-            }
-            const customOptions = result.customOptions || DefaultOptions
-            const parts = []
-            if (customOptions.protocol) parts.push(`${tabInfo.protocol}//`)
-            if (customOptions.hostname) parts.push(tabInfo.hostname)
-            if (customOptions.pathname) parts.push(tabInfo.pathname)
-            if (customOptions.hash) parts.push(tabInfo.hash)
-            if (customOptions.params && tabInfo.hash !== "")
-              parts.push(tabInfo.params)
-
-            text = `${tabInfo.title}\n${parts.join("")}`
-            copyTextToClipboard(tabs[0].id, text)
-          })
+          const options = await storage.get<OptionType>(STORE_KEYS)
+          let result = []
+          if (options.protocol) result.push(`${tabInfo.protocol}//`)
+          if (options.hostname) result.push(tabInfo.hostname)
+          if (options.pathname) result.push(tabInfo.pathname)
+          if (options.hash) result.push(tabInfo.hash)
+          if (options.params && tabInfo.hash !== "") result.push(tabInfo.params)
+          if (options.title) text = `${tabInfo.title}\n${result.join("")}`
+          else text = `${result.join("")}`
+          copyTextToClipboard(tabs[0].id, text)
           return // Exit early since this is asynchronous
         default:
           return
@@ -93,14 +90,3 @@ function copyTextToClipboard(tabId: number, text: string) {
     }
   )
 }
-
-// Handle messages from the popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === ACTION_TYPES.COPY_TAB_CUSTOM) {
-    handleCommand(COMMANDS.COPY_TAB_INFO_CUSTOM)
-    setTimeout(() => {
-      sendResponse({ success: true })
-    }, 100)
-    return true // Indicates that we will send a response asynchronously
-  }
-})

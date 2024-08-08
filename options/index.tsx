@@ -1,38 +1,39 @@
 import React, { useEffect, useState } from "react"
 
+import { useStorage } from "@plasmohq/storage/hook"
+
 import "../css/index.css"
 
-import { DefaultOptions, storage, STORE_KEYS } from "~constant/index"
+import {
+  COMMANDS,
+  DefaultOptions,
+  NoSetText,
+  STORE_KEYS
+} from "~constant/index"
 
-const Options = () => {
+export default function Options() {
   const [shortcuts, setShortcuts] = useState({
-    "copy-tab-info": "Not set",
-    "copy-tab-info-no-params": "Not set",
-    "copy-tab-info-markdown": "Not set",
-    "copy-tab-info-custom": "Not set"
+    [COMMANDS.COPY_TAB_INFO]: NoSetText,
+    [COMMANDS.COPY_TAB_INFO_NO_PARAMS]: NoSetText,
+    [COMMANDS.COPY_TAB_INFO_MARKDOWN]: NoSetText,
+    [COMMANDS.COPY_TAB_INFO_CUSTOM]: NoSetText
   })
-
-  const [customOptions, setCustomOptions] = useState(DefaultOptions)
+  const [customOptions, setCustomOptions] = useStorage(
+    STORE_KEYS,
+    DefaultOptions
+  )
 
   const [unsavedChanges, setUnsavedChanges] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
-
   useEffect(() => {
     chrome.commands.getAll((commands) => {
       const updatedShortcuts = { ...shortcuts }
       commands.forEach((command) => {
         if (command.name in updatedShortcuts) {
-          updatedShortcuts[command.name] = command.shortcut || "Not set"
+          updatedShortcuts[command.name] = command.shortcut || NoSetText
         }
       })
       setShortcuts(updatedShortcuts)
-    })
-    const result = storage.get<object>(STORE_KEYS).then((result) => {
-      const res = result ?? DefaultOptions
-
-      if (res) {
-        setCustomOptions({ ...customOptions, ...res })
-      }
     })
   }, [])
 
@@ -47,14 +48,11 @@ const Options = () => {
     setSaveStatus("")
   }
 
-  const saveCustomOptions = async () => {
-    await storage.set(STORE_KEYS, customOptions)
+  const saveCustomOptions = () => {
     setUnsavedChanges(false)
     setSaveStatus("Saved successfully!")
     setTimeout(() => setSaveStatus(""), 2000)
   }
-
-  console.log("customOptions", customOptions)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -160,5 +158,3 @@ const Options = () => {
     </div>
   )
 }
-
-export default Options

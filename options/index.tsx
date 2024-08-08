@@ -14,7 +14,6 @@ import {
 export default function Options() {
   const [shortcuts, setShortcuts] = useState({
     [COMMANDS.COPY_TAB_INFO]: NoSetText,
-    [COMMANDS.COPY_TAB_INFO_NO_PARAMS]: NoSetText,
     [COMMANDS.COPY_TAB_INFO_MARKDOWN]: NoSetText,
     [COMMANDS.COPY_TAB_INFO_CUSTOM]: NoSetText
   })

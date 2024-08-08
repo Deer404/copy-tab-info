@@ -36,9 +36,6 @@ function handleCommand(command: string) {
         case COMMANDS.COPY_TAB_INFO:
           text = `${tabInfo.title}\n${tabInfo.url}`
           break
-        case COMMANDS.COPY_TAB_INFO_NO_PARAMS:
-          text = `${tabInfo.title}\n${tabInfo.urlNoParams}`
-          break
         case COMMANDS.COPY_TAB_INFO_MARKDOWN:
           text = `[${tabInfo.title}](${tabInfo.url})`
           break

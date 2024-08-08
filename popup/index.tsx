@@ -20,16 +20,14 @@ interface TabInfo {
   url: string
   urlNoParams: string
   protocol: string
-
   hash?: string
-
   hostname?: string
-
   pathname?: string
-
   params?: string
 }
+
 const renderCommands = [COMMANDS.COPY_TAB_INFO, COMMANDS.COPY_TAB_INFO_MARKDOWN]
+
 export default function Popup() {
   const [tabInfo, setTabInfo] = useState<TabInfo>({
     title: "",
@@ -54,6 +52,8 @@ export default function Popup() {
   const [shortcuts, setShortcuts] = useState(
     Object.fromEntries(Object.values(COMMANDS).map((cmd) => [cmd, NoSetText]))
   )
+
+  const [activeTab, setActiveTab] = useState("full")
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
@@ -139,16 +139,64 @@ export default function Popup() {
     return colors[command] || "from-gray-400 to-gray-500"
   }
 
+  const handleCustomOptionChange = (
+    key: keyof typeof DefaultOptions,
+    value: boolean
+  ) => {
+    setCustomOptions((prev) => ({ ...prev, [key]: value }))
+    setActiveTab("custom")
+  }
+
+  const customPreviewText = generateCustomText(tabInfo, customOptions)
+
   return (
     <div className="w-[300px] p-4 font-sans bg-gradient-to-br from-[#e0eafc] to-[#cfdef3] rounded-lg shadow-lg">
       <h2 className="text-center text-xl font-bold text-gray-800 mb-2">
         CopyTab
       </h2>
       <div className="bg-white bg-opacity-90 p-3 rounded-md shadow-sm mb-2">
-        <p className="font-bold text-gray-800 mb-1 break-words">
-          {tabInfo.title}
-        </p>
-        <p className="text-gray-600 text-sm break-all">{tabInfo.url}</p>
+        <div className="flex mb-4 relative">
+          <div
+            className={`absolute bottom-0 h-1 w-1/2 bg-blue-500 transition-all duration-300 ease-in-out rounded-full ${
+              activeTab === "full" ? "left-0" : "left-1/2"
+            }`}
+          />
+          <button
+            className={`flex-1 px-4 pb-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+              activeTab === "full"
+                ? "text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("full")}>
+            Full URL
+          </button>
+          <button
+            className={`flex-1 px-4 pb-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+              activeTab === "custom"
+                ? "text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("custom")}>
+            Custom
+          </button>
+        </div>
+        {activeTab === "full" ? (
+          <>
+            <p className="font-bold text-gray-800 mb-1 break-words">
+              {tabInfo.title}
+            </p>
+            <p className="text-gray-600 text-sm break-all">{tabInfo.url}</p>
+          </>
+        ) : (
+          <>
+            <p className="font-bold text-gray-800 mb-1 break-words">
+              {customOptions.title ? tabInfo.title : undefined}
+            </p>
+            <p className="text-gray-600 text-sm break-all">
+              {customPreviewText}
+            </p>
+          </>
+        )}
       </div>
       <div className="grid grid-cols-1 gap-2 mb-2">
         {renderCommands.map((command) => (
@@ -165,12 +213,11 @@ export default function Popup() {
       </div>
       <CustomCopySection
         options={customOptions}
-        onChange={(key, value) =>
-          setCustomOptions((prev) => ({ ...prev, [key]: value }))
-        }
+        onChange={handleCustomOptionChange}
         onCopy={() => copyToClipboard(COMMANDS.COPY_TAB_INFO_CUSTOM)}
         copied={copied[COMMANDS.COPY_TAB_INFO_CUSTOM]}
         shortcut={shortcuts[COMMANDS.COPY_TAB_INFO_CUSTOM]}
+        onPreviewUpdate={() => setActiveTab("custom")}
       />
       <div className="text-center mt-4">
         <button
@@ -226,6 +273,7 @@ interface CustomCopySectionProps {
   onCopy: () => void
   copied: boolean
   shortcut: string
+  onPreviewUpdate: () => void
 }
 
 function CustomCopySection({
@@ -233,7 +281,8 @@ function CustomCopySection({
   onChange,
   onCopy,
   copied,
-  shortcut
+  shortcut,
+  onPreviewUpdate
 }: CustomCopySectionProps) {
   return (
     <div className="bg-white bg-opacity-90 p-3 rounded-md shadow-sm mb-2">
@@ -249,9 +298,10 @@ function CustomCopySection({
               <input
                 type="checkbox"
                 checked={value}
-                onChange={() =>
+                onChange={() => {
                   onChange(key as keyof typeof DefaultOptions, !value)
-                }
+                  onPreviewUpdate()
+                }}
                 className="mr-2 form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
               />
               <span>{key}</span>

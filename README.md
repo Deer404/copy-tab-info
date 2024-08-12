@@ -1,9 +1,11 @@
 # Copy Tab Info Chrome 扩展
 
 ## 扩展地址
-审核中，等待上架。
+[Copy Tab Info - Chrome 应用商店](https://chromewebstore.google.com/detail/copy-tab-info/dhdahkkjopabepglkofakameobkjngdn?authuser=0&hl=zh-CN)
 
-这是一个使用Plasmo框架开发的Chrome浏览器扩展。它允许用户快速复制当前标签页的标题和URL。
+这是一个基于chrome-mv3的Chrome浏览器扩展。它允许用户快速复制当前标签页的标题和URL。
+
+- 对于其他浏览器，暂时未测试，理论上打包出`firefox-mv2`的版本，也可以支持firefox。
 
 ## 主要功能
 

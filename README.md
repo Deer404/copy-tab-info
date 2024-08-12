@@ -39,6 +39,11 @@
 1. 在Chrome浏览器中打开 `chrome://extensions/shortcuts`
 2. 找到本扩展，设置您喜欢的快捷键
 
+
+## 已知问题
+
+- chrome内置的页面，例如`chrome://extensions/shortcuts`和[chromewebstore](chromewebstore.google.com)都是不支持快捷键的，只能手动点击复制。这是chrome的安全策略，其他网站不受此影响，所以该问题会一直存在。
+
 ## 贡献
 
 欢迎提交问题和拉取请求。

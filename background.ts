@@ -1,13 +1,17 @@
 import type { PlasmoCSConfig } from "plasmo"
 
 import {
-  ACTION_TYPES,
   COMMANDS,
-  DefaultOptions,
   storage,
   STORE_KEYS,
   type OptionType
 } from "~constant/index"
+import {
+  formatCustomTabInfo,
+  formatFullTabInfo,
+  formatMarkdownTabInfo,
+  getTabInfoFromTab
+} from "~utils/tab-format"
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"]
@@ -15,47 +19,32 @@ export const config: PlasmoCSConfig = {
 
 function handleCommand(command: string) {
   chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    if (tabs[0]) {
-      const url = new URL(tabs[0].url ?? "")
-      if (url.protocol.startsWith("chrome")) {
-        return
-      }
-      const tabInfo = {
-        title: tabs[0].title,
-        url: url.href,
-        urlNoParams: `${url.origin}${url.pathname}`,
-        hostname: url.hostname,
-        pathname: url.pathname,
-        hash: url.hash,
-        params: url.search,
-        protocol: url.protocol
-      }
+    const tab = tabs[0]
+    const tabInfo = getTabInfoFromTab(tab)
 
-      let text = ""
-      switch (command) {
-        case COMMANDS.COPY_TAB_INFO:
-          text = `${tabInfo.title}\n${tabInfo.url}`
-          break
-        case COMMANDS.COPY_TAB_INFO_MARKDOWN:
-          text = `[${tabInfo.title}](${tabInfo.url})`
-          break
-        case COMMANDS.COPY_TAB_INFO_CUSTOM:
-          const options = await storage.get<OptionType>(STORE_KEYS)
-          let result = []
-          if (options.protocol) result.push(`${tabInfo.protocol}//`)
-          if (options.hostname) result.push(tabInfo.hostname)
-          if (options.pathname) result.push(tabInfo.pathname)
-          if (options.hash) result.push(tabInfo.hash)
-          if (options.params) result.push(tabInfo.params)
-          if (options.title) text = `${tabInfo.title}\n${result.join("")}`
-          else text = `${result.join("")}`
-          copyTextToClipboard(tabs[0].id, text)
-          return // Exit early since this is asynchronous
-        default:
-          return
-      }
-      copyTextToClipboard(tabs[0].id, text)
+    if (tab?.id == null || !tabInfo || tabInfo.protocol.startsWith("chrome")) {
+      return
     }
+
+    let text = ""
+    switch (command) {
+      case COMMANDS.COPY_TAB_INFO:
+        text = formatFullTabInfo(tabInfo)
+        break
+      case COMMANDS.COPY_TAB_INFO_MARKDOWN:
+        text = formatMarkdownTabInfo(tabInfo)
+        break
+      case COMMANDS.COPY_TAB_INFO_CUSTOM:
+        text = formatCustomTabInfo(
+          tabInfo,
+          await storage.get<Partial<OptionType>>(STORE_KEYS)
+        )
+        break
+      default:
+        return
+    }
+
+    copyTextToClipboard(tab.id, text)
   })
 }
 

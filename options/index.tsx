@@ -4,19 +4,21 @@ import { useStorage } from "@plasmohq/storage/hook"
 
 import "../css/index.css"
 
+import { Button } from "~components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "~components/ui/card"
 import {
   COMMANDS,
   DefaultOptions,
   NoSetText,
-  STORE_KEYS
+  STORE_KEYS,
+  type OptionType
 } from "~constant/index"
+import { resolveCustomOptions } from "~utils/tab-format"
 
 export default function Options() {
-  const [shortcuts, setShortcuts] = useState({
-    [COMMANDS.COPY_TAB_INFO]: NoSetText,
-    [COMMANDS.COPY_TAB_INFO_MARKDOWN]: NoSetText,
-    [COMMANDS.COPY_TAB_INFO_CUSTOM]: NoSetText
-  })
+  const [shortcuts, setShortcuts] = useState<Record<string, string>>(
+    Object.fromEntries(Object.values(COMMANDS).map((cmd) => [cmd, NoSetText]))
+  )
   const [customOptions, setCustomOptions] = useStorage(
     STORE_KEYS,
     DefaultOptions
@@ -24,9 +26,12 @@ export default function Options() {
 
   const [unsavedChanges, setUnsavedChanges] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
+
   useEffect(() => {
     chrome.commands.getAll((commands) => {
-      const updatedShortcuts = { ...shortcuts }
+      const updatedShortcuts: Record<string, string> = Object.fromEntries(
+        Object.values(COMMANDS).map((cmd) => [cmd, NoSetText])
+      )
       commands.forEach((command) => {
         if (command.name in updatedShortcuts) {
           updatedShortcuts[command.name] = command.shortcut || NoSetText
@@ -40,8 +45,13 @@ export default function Options() {
     chrome.tabs.create({ url: "chrome://extensions/shortcuts" })
   }
 
-  const handleCustomOptionChange = (option) => {
-    const newOptions = { ...customOptions, [option]: !customOptions[option] }
+  const resolvedOptions = resolveCustomOptions(customOptions)
+
+  const handleCustomOptionChange = (option: keyof OptionType) => {
+    const newOptions = {
+      ...resolvedOptions,
+      [option]: !resolvedOptions[option]
+    }
     setCustomOptions(newOptions)
     setUnsavedChanges(true)
     setSaveStatus("")
@@ -54,105 +64,98 @@ export default function Options() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-neutral-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-extrabold text-gray-900 text-center mb-8">
+        <h1 className="mb-8 text-center text-3xl font-semibold text-neutral-900">
           CopyTab Options
         </h1>
 
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
-          <div className="px-6 py-4 bg-indigo-600">
-            <h2 className="text-xl font-semibold text-white">
-              Keyboard Shortcuts
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4 mb-6">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Keyboard Shortcuts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6 space-y-4">
               {Object.entries(shortcuts).map(([key, value]) => (
                 <div key={key}>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-sm font-medium text-neutral-500">
                     {key
                       .replace(/-/g, " ")
                       .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                  <p className="mt-1 text-lg font-semibold text-neutral-900">
                     {value}
                   </p>
                 </div>
               ))}
             </div>
-            <button
-              onClick={openShortcutSettings}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <Button onClick={openShortcutSettings} className="w-full" size="lg">
               Change Shortcuts
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
-          <div className="px-6 py-4 bg-teal-600">
-            <h2 className="text-xl font-semibold text-white">
-              Custom Format Options
-            </h2>
-          </div>
-          <div className="p-6">
-            <p className="text-gray-700 mb-4">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Custom Format Options</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-neutral-700">
               Select the elements you want to include in your custom format:
             </p>
-            <div className="flex gap-4 mb-6">
-              {Object.keys(customOptions).map((option) => (
+            <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {Object.keys(resolvedOptions).map((option) => (
                 <label
                   key={option}
-                  className="flex items-center bg-gray-100 p-3 rounded-lg">
+                  className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700">
                   <input
                     type="checkbox"
-                    checked={customOptions[option]}
-                    onChange={() => handleCustomOptionChange(option)}
-                    className="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                    checked={resolvedOptions[option as keyof OptionType]}
+                    onChange={() =>
+                      handleCustomOptionChange(option as keyof OptionType)
+                    }
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
                   />
-                  <span className="ml-2 text-gray-700 capitalize">
-                    {option}
-                  </span>
+                  <span className="capitalize">{option}</span>
                 </label>
               ))}
             </div>
             <div className="flex items-center justify-between">
-              <button
+              <Button
                 onClick={saveCustomOptions}
                 disabled={!unsavedChanges}
-                className={`${
-                  unsavedChanges
-                    ? "bg-teal-600 hover:bg-teal-700"
-                    : "bg-gray-400 cursor-not-allowed"
-                } text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500`}>
+                variant={unsavedChanges ? "default" : "secondary"}
+                className="min-w-[140px]">
                 {unsavedChanges ? "Save Changes" : "No Changes to Save"}
-              </button>
+              </Button>
               {saveStatus && (
-                <span className="text-green-600 font-medium">{saveStatus}</span>
+                <span className="text-sm font-medium text-emerald-700">
+                  {saveStatus}
+                </span>
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div className="px-6 py-4 bg-gray-800">
-            <h2 className="text-xl font-semibold text-white">About CopyTab</h2>
-          </div>
-          <div className="p-6">
-            <p className="text-gray-700 mb-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>About CopyTab</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-neutral-700">
               CopyTab allows you to quickly copy your current tab's information.
               Use the keyboard shortcuts to copy the information in full URL,
-              URL without parameters, Markdown format, or custom format.
+              Markdown format, or custom format.
             </p>
             <a
               href="https://github.com/Deer404/copy-tab-info"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-indigo-600 hover:text-indigo-800 font-medium">
+              className="text-sm font-medium text-neutral-800 underline underline-offset-2 hover:text-neutral-600">
               View GitHub Repository
             </a>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

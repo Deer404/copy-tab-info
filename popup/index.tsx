@@ -4,71 +4,79 @@ import "../css/index.css"
 
 import { useStorage } from "@plasmohq/storage/hook"
 
-import { COMMANDS, NoSetText, STORE_KEYS } from "~constant"
-
-export const DefaultOptions = {
-  title: true,
-  hostname: true,
-  pathname: true,
-  hash: true,
-  params: true,
-  protocol: true
-}
-
-interface TabInfo {
-  title: string
-  url: string
-  urlNoParams: string
-  protocol: string
-  hash?: string
-  hostname?: string
-  pathname?: string
-  params?: string
-}
+import { Button } from "~components/ui/button"
+import { Card, CardContent } from "~components/ui/card"
+import { Tabs } from "~components/ui/tabs"
+import {
+  COMMANDS,
+  DefaultOptions,
+  NoSetText,
+  STORE_KEYS,
+  type OptionType
+} from "~constant"
+import {
+  formatCustomTabInfo,
+  formatFullTabInfo,
+  formatMarkdownTabInfo,
+  getTabInfoFromTab,
+  resolveCustomOptions,
+  type TabInfo
+} from "~utils/tab-format"
 
 const renderCommands = [COMMANDS.COPY_TAB_INFO, COMMANDS.COPY_TAB_INFO_MARKDOWN]
 
+const EMPTY_TAB_INFO: TabInfo = {
+  title: "",
+  url: "",
+  urlNoParams: "",
+  protocol: "",
+  hash: "",
+  hostname: "",
+  pathname: "",
+  params: ""
+}
+
+const tabItems: Array<{ key: "full" | "custom"; label: string }> = [
+  { key: "full", label: "Full URL" },
+  { key: "custom", label: "Custom" }
+]
+
+const commandLabels = {
+  [COMMANDS.COPY_TAB_INFO]: "Full URL",
+  [COMMANDS.COPY_TAB_INFO_MARKDOWN]: "Markdown",
+  [COMMANDS.COPY_TAB_INFO_CUSTOM]: "Copy Custom"
+}
+
+const commandVariants = {
+  [COMMANDS.COPY_TAB_INFO]: "default",
+  [COMMANDS.COPY_TAB_INFO_MARKDOWN]: "secondary",
+  [COMMANDS.COPY_TAB_INFO_CUSTOM]: "default"
+} as const
+
 export default function Popup() {
-  const [tabInfo, setTabInfo] = useState<TabInfo>({
-    title: "",
-    url: "",
-    urlNoParams: "",
-    protocol: "",
-    hash: "",
-    hostname: "",
-    pathname: "",
-    params: ""
-  })
+  const [tabInfo, setTabInfo] = useState<TabInfo>(EMPTY_TAB_INFO)
 
   const [customOptions, setCustomOptions] = useStorage(
     STORE_KEYS,
     DefaultOptions
   )
 
-  const [copied, setCopied] = useState(
+  const [copied, setCopied] = useState<Record<string, boolean>>(
     Object.fromEntries(Object.values(COMMANDS).map((cmd) => [cmd, false]))
   )
 
-  const [shortcuts, setShortcuts] = useState(
+  const [shortcuts, setShortcuts] = useState<Record<string, string>>(
     Object.fromEntries(Object.values(COMMANDS).map((cmd) => [cmd, NoSetText]))
   )
 
-  const [activeTab, setActiveTab] = useState("full")
+  const [activeTab, setActiveTab] = useState<"full" | "custom">("full")
+  const hasTabUrl = tabInfo.url.trim().length > 0
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-      if (tab && tab.url) {
-        const url = new URL(tab.url)
-        setTabInfo({
-          title: tab.title || "",
-          url: url.href,
-          urlNoParams: `${url.origin}${url.pathname}`,
-          protocol: url.protocol,
-          hostname: url.hostname,
-          pathname: url.pathname,
-          hash: url.hash,
-          params: url.search
-        })
+      const info = getTabInfoFromTab(tab)
+      if (info) {
+        setTabInfo(info)
       }
     })
 
@@ -81,36 +89,20 @@ export default function Popup() {
   }, [])
 
   const copyToClipboard = (command: string) => {
+    if (!hasTabUrl) {
+      return
+    }
+
     const texts = {
-      [COMMANDS.COPY_TAB_INFO]: `${tabInfo.title}\n${tabInfo.url}`,
-      [COMMANDS.COPY_TAB_INFO_MARKDOWN]: `[${tabInfo.title}](${tabInfo.url})`,
-      [COMMANDS.COPY_TAB_INFO_CUSTOM]: generateCustomText(
-        tabInfo,
-        customOptions
-      )
+      [COMMANDS.COPY_TAB_INFO]: formatFullTabInfo(tabInfo),
+      [COMMANDS.COPY_TAB_INFO_MARKDOWN]: formatMarkdownTabInfo(tabInfo),
+      [COMMANDS.COPY_TAB_INFO_CUSTOM]: formatCustomTabInfo(tabInfo, customOptions)
     }
 
     navigator.clipboard
       .writeText(texts[command] || "")
       .then(() => updateCopiedState(command))
       .catch((err) => console.error("Failed to copy to clipboard:", err))
-  }
-
-  const generateCustomText = (
-    tabInfo: TabInfo,
-    options: typeof DefaultOptions,
-    hasTitle = true
-  ) => {
-    let text = ""
-    let result = []
-    if (options.protocol) result.push(`${tabInfo.protocol}//`)
-    if (options.hostname) result.push(tabInfo.hostname)
-    if (options.pathname) result.push(tabInfo.pathname)
-    if (options.hash) result.push(tabInfo.hash)
-    if (options.params) result.push(tabInfo.params)
-    if (options.title && hasTitle) text = `${tabInfo.title}\n${result.join("")}`
-    else text = `${result.join("")}`
-    return text
   }
 
   const updateCopiedState = (command: string) => {
@@ -122,110 +114,77 @@ export default function Popup() {
     chrome.runtime.openOptionsPage()
   }
 
-  const getLabelForCommand = (command: string) => {
-    const labels = {
-      [COMMANDS.COPY_TAB_INFO]: "Full URL",
-      [COMMANDS.COPY_TAB_INFO_MARKDOWN]: "Markdown",
-      [COMMANDS.COPY_TAB_INFO_CUSTOM]: "Custom"
-    }
-    return labels[command] || "Copy"
-  }
-
-  const getColorForCommand = (command: string) => {
-    const colors = {
-      [COMMANDS.COPY_TAB_INFO]: "from-blue-400 to-indigo-500",
-      [COMMANDS.COPY_TAB_INFO_MARKDOWN]: "from-yellow-400 to-orange-500",
-      [COMMANDS.COPY_TAB_INFO_CUSTOM]: "from-teal-400 to-cyan-500"
-    }
-    return colors[command] || "from-gray-400 to-gray-500"
-  }
-
-  const handleCustomOptionChange = (
-    key: keyof typeof DefaultOptions,
-    value: boolean
-  ) => {
-    setCustomOptions((prev) => ({ ...prev, [key]: value }))
+  const handleCustomOptionChange = (key: keyof OptionType, value: boolean) => {
+    setCustomOptions((prev) => ({ ...resolveCustomOptions(prev), [key]: value }))
     setActiveTab("custom")
   }
 
-  const customPreviewText = generateCustomText(tabInfo, customOptions, false)
+  const resolvedOptions = resolveCustomOptions(customOptions)
+  const customPreviewText = formatCustomTabInfo(tabInfo, resolvedOptions, false)
 
   return (
-    <div className="w-[300px] p-4 font-sans bg-gradient-to-br from-[#e0eafc] to-[#cfdef3] rounded-lg shadow-lg">
-      <h2 className="text-center text-xl font-bold text-gray-800 mb-2">
-        CopyTab
-      </h2>
-      <div className="bg-white bg-opacity-90 p-3 rounded-md shadow-sm mb-2">
-        <div className="flex mb-4 relative">
-          <div
-            className={`absolute bottom-0 h-1 w-1/2 bg-blue-500 transition-all duration-300 ease-in-out rounded-full ${
-              activeTab === "full" ? "left-0" : "left-1/2"
-            }`}
+    <div className="w-[300px] bg-neutral-50 p-4 text-neutral-900">
+      <h2 className="mb-3 text-center text-lg font-semibold">CopyTab</h2>
+      <Card className="mb-3">
+        <CardContent className="space-y-3">
+          <Tabs
+            tabs={tabItems}
+            activeKey={activeTab}
+            onChange={(key) => setActiveTab(key as "full" | "custom")}
           />
-          <button
-            className={`flex-1 px-4 pb-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-              activeTab === "full"
-                ? "text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setActiveTab("full")}>
-            Full URL
-          </button>
-          <button
-            className={`flex-1 px-4 pb-2 text-sm font-medium transition-all duration-200 ease-in-out ${
-              activeTab === "custom"
-                ? "text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setActiveTab("custom")}>
-            Custom
-          </button>
-        </div>
-        {activeTab === "full" ? (
-          <>
-            <p className="font-bold text-gray-800 mb-1 break-words">
-              {tabInfo.title}
-            </p>
-            <p className="text-gray-600 text-sm break-all">{tabInfo.url}</p>
-          </>
-        ) : (
-          <>
-            <p className="font-bold text-gray-800 mb-1 break-words">
-              {customOptions.title ? tabInfo.title : ""}
-            </p>
-            <p className="text-gray-600 text-sm break-all">
-              {customPreviewText}
-            </p>
-          </>
-        )}
-      </div>
-      <div className="grid grid-cols-1 gap-2 mb-2">
+          {activeTab === "full" ? (
+            <>
+              <p className="break-words text-sm font-semibold text-neutral-900">
+                {tabInfo.title}
+              </p>
+              <p className="break-all text-xs text-neutral-600">{tabInfo.url}</p>
+            </>
+          ) : (
+            <>
+              <p className="break-words text-sm font-semibold text-neutral-900">
+                {resolvedOptions.title ? tabInfo.title : ""}
+              </p>
+              <p className="break-all text-xs text-neutral-600">
+                {customPreviewText}
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
+      <div className="mb-3 grid grid-cols-1 gap-2">
         {renderCommands.map((command) => (
           <CopyButton
             key={command}
             onClick={() => copyToClipboard(command)}
             copied={copied[command]}
             shortcut={shortcuts[command]}
-            label={getLabelForCommand(command)}
-            color={getColorForCommand(command)}
-            disabled={false}
+            label={commandLabels[command] ?? "Copy"}
+            variant={commandVariants[command] ?? "default"}
+            disabled={!hasTabUrl}
           />
         ))}
       </div>
+      {!hasTabUrl && (
+        <p className="mb-3 text-center text-xs text-neutral-500">
+          Open a valid tab URL to enable copying.
+        </p>
+      )}
       <CustomCopySection
-        options={customOptions}
+        options={resolvedOptions}
         onChange={handleCustomOptionChange}
         onCopy={() => copyToClipboard(COMMANDS.COPY_TAB_INFO_CUSTOM)}
         copied={copied[COMMANDS.COPY_TAB_INFO_CUSTOM]}
         shortcut={shortcuts[COMMANDS.COPY_TAB_INFO_CUSTOM]}
         onPreviewUpdate={() => setActiveTab("custom")}
+        disabled={!hasTabUrl}
       />
-      <div className="text-center mt-4">
-        <button
+      <div className="mt-3 text-center">
+        <Button
           onClick={openOptionsPage}
-          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+          variant="ghost"
+          className="text-sm">
           Customize Options
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -236,7 +195,7 @@ interface CopyButtonProps {
   copied: boolean
   shortcut: string
   label: string
-  color: string
+  variant: "default" | "secondary" | "outline" | "ghost"
   disabled: boolean
 }
 
@@ -245,36 +204,33 @@ function CopyButton({
   copied,
   shortcut,
   label,
-  color,
+  variant,
   disabled = false
 }: CopyButtonProps) {
-  const buttonClass = `flex flex-col justify-center items-center p-2 ${
-    copied ? "bg-green-500" : `bg-gradient-to-r ${color}`
-  } text-white rounded-md transition-all duration-300 hover:opacity-90`
-  const disabledClass =
-    "flex flex-col justify-center items-center p-2 cursor-not-allowed bg-gray-400 rounded-md p-2 text-white"
   return (
-    <button
+    <Button
       disabled={disabled}
       onClick={onClick}
-      className={disabled ? disabledClass : buttonClass}>
-      <span className="font-medium text-sm">{copied ? "Copied!" : label}</span>
+      variant={copied ? "secondary" : variant}
+      className="h-auto w-full flex-col gap-1 py-2">
+      <span className="text-sm font-medium">{copied ? "Copied!" : label}</span>
       {shortcut !== NoSetText && (
-        <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded mt-1">
+        <span className="rounded border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-600">
           {shortcut}
         </span>
       )}
-    </button>
+    </Button>
   )
 }
 
 interface CustomCopySectionProps {
-  options: typeof DefaultOptions
-  onChange: (key: keyof typeof DefaultOptions, value: boolean) => void
+  options: OptionType
+  onChange: (key: keyof OptionType, value: boolean) => void
   onCopy: () => void
   copied: boolean
   shortcut: string
   onPreviewUpdate: () => void
+  disabled: boolean
 }
 
 function CustomCopySection({
@@ -283,43 +239,46 @@ function CustomCopySection({
   onCopy,
   copied,
   shortcut,
-  onPreviewUpdate
+  onPreviewUpdate,
+  disabled
 }: CustomCopySectionProps) {
   return (
-    <div className="bg-white bg-opacity-90 p-3 rounded-md shadow-sm mb-2">
-      <div className="mb-3">
-        <h3 className="font-semibold text-gray-700 mb-2">
-          Custom Copy Options
-        </h3>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-          {Object.entries(options).map(([key, value]) => (
-            <label
-              key={key}
-              className="flex items-center text-sm text-gray-600">
-              <input
-                type="checkbox"
-                checked={value}
-                onChange={() => {
-                  onChange(key as keyof typeof DefaultOptions, !value)
-                  onPreviewUpdate()
-                }}
-                className="mr-2 form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-              />
-              <span>{key}</span>
-            </label>
-          ))}
+    <Card className="mb-3">
+      <CardContent className="space-y-3">
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-neutral-800">
+            Custom Copy Options
+          </h3>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            {Object.entries(options).map(([key, value]) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={() => {
+                    onChange(key as keyof OptionType, !value)
+                    onPreviewUpdate()
+                  }}
+                  className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
+                />
+                <span>{key}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-1 gap-2">
+      </CardContent>
+      <div className="p-4 pt-0">
         <CopyButton
           onClick={onCopy}
           copied={copied}
           shortcut={shortcut}
           label="Copy Custom"
-          color="from-teal-400 to-cyan-500"
-          disabled={false}
+          variant="default"
+          disabled={disabled}
         />
       </div>
-    </div>
+    </Card>
   )
 }

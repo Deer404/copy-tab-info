@@ -53,6 +53,24 @@ const commandVariants = {
   [COMMANDS.COPY_TAB_INFO_CUSTOM]: "default"
 } as const
 
+const optionLabels: Record<keyof OptionType, string> = {
+  title: "Title",
+  hostname: "Domain",
+  pathname: "Path",
+  hash: "Hash",
+  params: "Query",
+  protocol: "Protocol"
+}
+
+const compactOptionOrder: Array<keyof OptionType> = [
+  "title",
+  "protocol",
+  "hostname",
+  "pathname",
+  "params",
+  "hash"
+]
+
 export default function Popup() {
   const [tabInfo, setTabInfo] = useState<TabInfo>(EMPTY_TAB_INFO)
 
@@ -96,7 +114,10 @@ export default function Popup() {
     const texts = {
       [COMMANDS.COPY_TAB_INFO]: formatFullTabInfo(tabInfo),
       [COMMANDS.COPY_TAB_INFO_MARKDOWN]: formatMarkdownTabInfo(tabInfo),
-      [COMMANDS.COPY_TAB_INFO_CUSTOM]: formatCustomTabInfo(tabInfo, customOptions)
+      [COMMANDS.COPY_TAB_INFO_CUSTOM]: formatCustomTabInfo(
+        tabInfo,
+        customOptions
+      )
     }
 
     navigator.clipboard
@@ -115,7 +136,10 @@ export default function Popup() {
   }
 
   const handleCustomOptionChange = (key: keyof OptionType, value: boolean) => {
-    setCustomOptions((prev) => ({ ...resolveCustomOptions(prev), [key]: value }))
+    setCustomOptions((prev) => ({
+      ...resolveCustomOptions(prev),
+      [key]: value
+    }))
     setActiveTab("custom")
   }
 
@@ -123,35 +147,62 @@ export default function Popup() {
   const customPreviewText = formatCustomTabInfo(tabInfo, resolvedOptions, false)
 
   return (
-    <div className="w-[300px] bg-neutral-50 p-4 text-neutral-900">
-      <h2 className="mb-3 text-center text-lg font-semibold">CopyTab</h2>
-      <Card className="mb-3">
-        <CardContent className="space-y-3">
+    <div className="w-[340px] p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-base font-semibold leading-none tracking-tight">
+            CopyTab
+          </h2>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Copy current tab quickly
+          </p>
+        </div>
+        <Button
+          onClick={openOptionsPage}
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs">
+          Options
+        </Button>
+      </div>
+
+      <Card className="mb-2">
+        <CardContent className="space-y-2 p-3 pt-3">
           <Tabs
             tabs={tabItems}
             activeKey={activeTab}
             onChange={(key) => setActiveTab(key as "full" | "custom")}
           />
           {activeTab === "full" ? (
-            <>
-              <p className="break-words text-sm font-semibold text-neutral-900">
+            <section
+              role="tabpanel"
+              id="tab-panel-full"
+              aria-labelledby="tab-full"
+              className="space-y-2">
+              <p className="line-clamp-2 break-words text-sm font-semibold leading-snug">
                 {tabInfo.title}
               </p>
-              <p className="break-all text-xs text-neutral-600">{tabInfo.url}</p>
-            </>
+              <p className="line-clamp-2 break-all rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
+                {tabInfo.url}
+              </p>
+            </section>
           ) : (
-            <>
-              <p className="break-words text-sm font-semibold text-neutral-900">
+            <section
+              role="tabpanel"
+              id="tab-panel-custom"
+              aria-labelledby="tab-custom"
+              className="space-y-2">
+              <p className="line-clamp-2 break-words text-sm font-semibold leading-snug">
                 {resolvedOptions.title ? tabInfo.title : ""}
               </p>
-              <p className="break-all text-xs text-neutral-600">
+              <p className="line-clamp-2 break-all rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
                 {customPreviewText}
               </p>
-            </>
+            </section>
           )}
         </CardContent>
       </Card>
-      <div className="mb-3 grid grid-cols-1 gap-2">
+      <div className="mb-2 grid grid-cols-1 gap-1.5">
         {renderCommands.map((command) => (
           <CopyButton
             key={command}
@@ -165,27 +216,21 @@ export default function Popup() {
         ))}
       </div>
       {!hasTabUrl && (
-        <p className="mb-3 text-center text-xs text-neutral-500">
+        <p className="mb-2 rounded-md border border-dashed p-1.5 text-center text-[11px] text-muted-foreground">
           Open a valid tab URL to enable copying.
         </p>
       )}
-      <CustomCopySection
-        options={resolvedOptions}
-        onChange={handleCustomOptionChange}
-        onCopy={() => copyToClipboard(COMMANDS.COPY_TAB_INFO_CUSTOM)}
-        copied={copied[COMMANDS.COPY_TAB_INFO_CUSTOM]}
-        shortcut={shortcuts[COMMANDS.COPY_TAB_INFO_CUSTOM]}
-        onPreviewUpdate={() => setActiveTab("custom")}
-        disabled={!hasTabUrl}
-      />
-      <div className="mt-3 text-center">
-        <Button
-          onClick={openOptionsPage}
-          variant="ghost"
-          className="text-sm">
-          Customize Options
-        </Button>
-      </div>
+      {activeTab === "custom" && (
+        <CustomCopySection
+          options={resolvedOptions}
+          onChange={handleCustomOptionChange}
+          onCopy={() => copyToClipboard(COMMANDS.COPY_TAB_INFO_CUSTOM)}
+          copied={copied[COMMANDS.COPY_TAB_INFO_CUSTOM]}
+          shortcut={shortcuts[COMMANDS.COPY_TAB_INFO_CUSTOM]}
+          onPreviewUpdate={() => setActiveTab("custom")}
+          disabled={!hasTabUrl}
+        />
+      )}
     </div>
   )
 }
@@ -212,10 +257,12 @@ function CopyButton({
       disabled={disabled}
       onClick={onClick}
       variant={copied ? "secondary" : variant}
-      className="h-auto w-full flex-col gap-1 py-2">
-      <span className="text-sm font-medium">{copied ? "Copied!" : label}</span>
+      className="h-9 w-full justify-between gap-2 px-3">
+      <span className="text-sm font-medium tracking-tight">
+        {copied ? "Copied!" : label}
+      </span>
       {shortcut !== NoSetText && (
-        <span className="rounded border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-600">
+        <span className="rounded border bg-background px-1.5 py-0.5 text-[11px] text-muted-foreground">
           {shortcut}
         </span>
       )}
@@ -243,33 +290,36 @@ function CustomCopySection({
   disabled
 }: CustomCopySectionProps) {
   return (
-    <Card className="mb-3">
-      <CardContent className="space-y-3">
+    <Card className="mb-2">
+      <CardContent className="space-y-2 p-3 pt-3">
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-neutral-800">
+          <h3 className="mb-1 text-xs font-semibold tracking-tight text-muted-foreground">
             Custom Copy Options
           </h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            {Object.entries(options).map(([key, value]) => (
-              <label
-                key={key}
-                className="flex items-center gap-2 text-sm text-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={value}
-                  onChange={() => {
-                    onChange(key as keyof OptionType, !value)
-                    onPreviewUpdate()
-                  }}
-                  className="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-300"
-                />
-                <span>{key}</span>
-              </label>
-            ))}
+          <div className="grid grid-cols-3 gap-1">
+            {compactOptionOrder.map((key) => {
+              const value = options[key]
+              return (
+                <label
+                  key={key}
+                  className="flex cursor-pointer select-none items-center gap-1 rounded-md border px-1.5 py-1 text-[11px] text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+                  <input
+                    type="checkbox"
+                    checked={value}
+                    onChange={() => {
+                      onChange(key as keyof OptionType, !value)
+                      onPreviewUpdate()
+                    }}
+                    className="h-3.5 w-3.5 rounded border-input accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+                  />
+                  <span>{optionLabels[key]}</span>
+                </label>
+              )
+            })}
           </div>
         </div>
       </CardContent>
-      <div className="p-4 pt-0">
+      <div className="px-3 pb-3 pt-0">
         <CopyButton
           onClick={onCopy}
           copied={copied}

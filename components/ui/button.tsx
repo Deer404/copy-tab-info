@@ -6,10 +6,11 @@ type ButtonVariant = "default" | "secondary" | "outline" | "ghost"
 type ButtonSize = "default" | "sm" | "lg"
 
 const variantClasses: Record<ButtonVariant, string> = {
-  default: "bg-neutral-900 text-white hover:bg-neutral-800",
-  secondary: "bg-neutral-100 text-neutral-900 hover:bg-neutral-200",
-  outline: "border border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
-  ghost: "text-neutral-700 hover:bg-neutral-100"
+  default: "bg-primary text-primary-foreground hover:bg-primary/90",
+  secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+  outline:
+    "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+  ghost: "hover:bg-accent hover:text-accent-foreground"
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -32,7 +33,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ring-offset-background",
         variantClasses[variant],
         sizeClasses[size],
         className
